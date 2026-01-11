@@ -1,7 +1,7 @@
-# Pseudo-code: Take The Last
+# Pseudo-code: The Minimalist
 # Objective: 
 #   Given two items and a list of features for each, the model will 
-#   return which one has a larger criterion (i.e. larger outcome)
+#   return which one has a larger criteria (i.e. larger outcome)
 #
 # Inputs:
 #   Inputs are:
@@ -17,24 +17,18 @@
 #     are treated as discriminating (item with known value is predicted 
 #     higher). If FALSE, features with any NA values are skipped 
 #     (non-discriminating).
-#   - f_order: ordered vector of feature names ordered by recency of successful 
-#     discrimination (i.e., the f_order returned by a previous take_the_last()
-#     call). On the first call, you may provide an initial order; if none is 
-#     provided, the function initializes it using the feature column order in data.
 #
 # Outputs: 
 #   Model returns a list with:
 #   - name: the name/identifier of the item predicted to have higher outcome
 #   - cues: vector of feature names that were checked to make the decision
-#   - f_order: updated feature order after the decision (move-to-front update: 
-#     the discriminating feature is moved to position 1, and all other features
-#     keep their relative order).
 #
 # Assumptions:
-# 1. Recency-based Feature Priority (Unequal Importance):
-#    - Features are checked in an order determined by how recently they successfully 
-#      discriminated in prior comparisons (most recent success first).
-#    - Learning is limited to reordering cues (no cue weights/validities are estimated).
+# 1. No Feature Hierarchy (Equal Importance):
+#    - Features are sampled randomly with equal probability
+#    - No feature is assumed to be more predictive or important than others
+#    - This differs from models like "Take The Best" which rank features by 
+#      validity
 #
 # 2. Ordinal Comparison Only (Magnitude Irrelevant):
 #    - Only the direction of difference matters (which item is larger)
@@ -48,7 +42,7 @@
 #    - Once a discriminating cue is found, all other features are ignored
 #
 # 4. Recognition as a Valid Predictor (if recognition data available):
-#    - Assumes recognized items tend to have higher criterion than 
+#    - Assumes recognized items tend to have higher criteria values than 
 #      unrecognized items
 #    - Recognition is checked before any features
 #
@@ -64,50 +58,41 @@
 # Algorithm:
 # Step 1: Initialize
 #   - checked = empty vector to track checked features
-#   - f_order:
-#     - If f_order is not provided: initialize using the feature column 
-#       order in data, excluding the id and the recognized columns
-#     - If f_order is provided, restrict it to cue columns in data (drop 
-#       id and recognized, and remove any features not present in data).
+#   - features = all column names except id column
 #
 # Step 2: Recognition Heuristic (if available)
 #   - If "recognized" column exists in data:
 #     - Add "recognized" to checked list
 #     - If exactly one item has recognized = 1:
-#       - Return that item's name, checked list and f_order
+#       - Return that item's name and checked list
 #   - Otherwise, proceed to Step 3
 #
 # Step 3: Feature Comparison Loop
-#   - For each feature in f_order (from first to last):
+#   - While unchecked features remain:
+#     - Randomly sample one unchecked feature
 #     - Add feature to checked list
 #     - Find item(s) with maximum value for this feature:
 #       - If na_heuristic = TRUE: Non-NA value wins
 #       - If na_heuristic = FALSE: if any NA, feature is skipped
 #     - If exactly one item has the maximum value (feature discriminates):
-#       - Move the discriminating feature to the front of f_order
-#       - Return that item's name, checked list and f_order
+#       - Return that item's name and checked list
 #     - Else (both have same value OR both NA when na_heuristic=FALSE):
 #       - Continue to next feature
 #
 # Step 4: Random Choice (if no feature discriminated)
 #   - If all features checked without finding discrimination:
 #     - Randomly sample one of the two item names
-#     - Return sampled name, checked list and f_order
+#     - Return sampled name and checked list
 
-take_the_last <- function(data = data, id = "Name", na_heuristic = TRUE, f_order = NULL) {
+the_minimalist <- function(data = data, id = "Name", na_heuristic = TRUE) {
     # Name of recognition column
     recognized <- "recognized"
     # Preprocessing
     data[[id]] <- as.character(data[[id]])
 
-    # Step 1 - Initialize
+    # Step 1 - Initialize checked list
     checked = c()
-    features = colnames(data)[!colnames(data) %in% c(id, recognized)]
-    if (is.null(f_order)) {
-        f_order = features
-    } else {
-        f_order = f_order[f_order %in% features]
-    }
+    features = colnames(data)[colnames(data) != id]
 
     # Step 2 - Recognition heuristic
     # Check if recognized column provided
@@ -119,15 +104,14 @@ take_the_last <- function(data = data, id = "Name", na_heuristic = TRUE, f_order
         # If only one item recognized
         if (sum(recon, na.rm = T) == 1) {
             return(list("name" = data[[id]][which(recon)],
-                        "cues" = checked,
-                        "f_order" = f_order))
+                        "cues" = checked))
         }
     }
 
-    # Step 3 - Check features in an order determined by how recently 
-    # they successfully discriminated in prior comparisons
-    for(feature in f_order) {
-        feature <- f_order[1]
+    # Step 3 - While unchecked features remain
+    while(length(checked) != length(features)) {
+        # Randomly choose an unchecked feature
+        feature = sample(features[!features %in% checked], size = 1)
         # Add feature to checked list
         checked <- c(checked, feature)
         # Get item with max cue
@@ -138,33 +122,13 @@ take_the_last <- function(data = data, id = "Name", na_heuristic = TRUE, f_order
         # length(item_max) == 0
         # If items has same feature value, then length(item_max) == 2
         if(length(item_max) != 0 && length(item_max) != 2) {
-            # Move the discriminating feature to the front of f_order
-            f_order <- c(feature, setdiff(f_order, feature))
             return(list("name" = data[[id]][item_max],
-                        "cues" = checked,
-                        "f_order" = f_order))
+                        "cues" = checked))
         }
     }
 
     # Step 4 - if all features are checked
     # Sample randomly one of the 2 items
     return(list("name" = sample(data[[id]], size = 1),
-                "cues" = checked,
-                "f_order" = f_order))
+                "cues" = checked))
 }
-
-
-library(heuristica)
-data(city_population)
-data(highschool_dropout)
-
-# Prepare data
-data <- city_population[3:4,]
-# Exclude true outcome column
-outcome <- data[, colnames(data) %in% c("Running_Number")]
-# Add recognition column
-data$recognized <- c(0, 0)
-data <- data[, !colnames(data) %in% c("Running_Number", "Population")]
-
-#data[1, 3] <- NA
-take_the_last(data, na_heuristic = T)

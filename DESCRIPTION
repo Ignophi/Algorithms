@@ -1,0 +1,20 @@
+Package: algorithms
+Title: NA
+Version: 0.0.1
+Authors@R: 
+    person("Ignophi", "Hu", , "ignophi.hu@pm.me", role = c("aut", "cre", "cph"),
+           comment = c(ORCID = "0009-0002-4094-0868"))
+Description:  Algorithms is a from-scratch implementation of decision-making 
+    and classification models, beginning with simple heuristics and progressing 
+    toward more complex algorithms, with an emphasis on understanding their 
+    underlying assumptions. 
+License: MIT + file LICENSE
+URL: https://github.com/Ignophi/Algorithms
+BugReports: https://github.com/Ignophi/Algorithms/issues
+Imports:
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.3
