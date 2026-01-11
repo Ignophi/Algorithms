@@ -4,15 +4,15 @@
 #   return which one has a larger criteria (i.e. larger outcome)
 #
 # Inputs:
-#   Input is expected to be a dataframe with two rows, one for each
-#   item, and the following columns:
-#   - id: item name/identifier column (specified by user, default "Name")
-#   - recognized (optional): binary column with 1 indicating the item
-#     is recognized and 0 that it is not. If not present, recognition
-#     heuristic is skipped.
-#   - features: one or more columns (cues) assumed to be informative on
-#     the outcome (criteria of interest). Features can be numeric or binary.
-#     Higher values indicate higher expected outcome.
+#   Inputs are:
+#   - data: a dataframe with two rows (one per item) and the following columns:
+#       - id: item name/identifier column (specified by user, default "Name")
+#       - recognized (optional): binary column with 1 indicating the item
+#         is recognized and 0 that it is not. If not present, recognition
+#         heuristic is skipped.
+#       - one or more columns (cues) assumed to be informative on
+#         the outcome (criterion of interest). Features can be numeric or binary.
+#         Higher values indicate higher expected outcome.
 #   - na_heuristic: boolean argument (default TRUE). If TRUE, NA values 
 #     are treated as discriminating (item with known value is predicted 
 #     higher). If FALSE, features with any NA values are skipped 
@@ -72,8 +72,8 @@
 #     - Randomly sample one unchecked feature
 #     - Add feature to checked list
 #     - Find item(s) with maximum value for this feature:
-#       - If na_heuristic = TRUE: NAs are ignored, non-NA value wins
-#       - If na_heuristic = FALSE: if any NA exists, feature is skipped
+#       - If na_heuristic = TRUE: Non-NA value wins
+#       - If na_heuristic = FALSE: if any NA, feature is skipped
 #     - If exactly one item has the maximum value (feature discriminates):
 #       - Return that item's name and checked list
 #     - Else (both have same value OR both NA when na_heuristic=FALSE):
