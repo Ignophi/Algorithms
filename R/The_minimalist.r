@@ -84,6 +84,9 @@
 #     - Randomly sample one of the two item names
 #     - Return sampled name and checked list
 
+#' The Minimalist heuristic
+#'
+#' @export
 the_minimalist <- function(data = data, id = "Name", na_heuristic = TRUE) {
     # Name of recognition column
     recognized <- "recognized"

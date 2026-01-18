@@ -94,6 +94,9 @@
 #     - Randomly sample one of the two item names
 #     - Return sampled name, checked list and f_order
 
+#' Take The Last heuristic
+#'
+#' @export
 take_the_last <- function(data = data, id = "Name", na_heuristic = TRUE, f_order = NULL) {
     # Name of recognition column
     recognized <- "recognized"
@@ -127,7 +130,6 @@ take_the_last <- function(data = data, id = "Name", na_heuristic = TRUE, f_order
     # Step 3 - Check features in an order determined by how recently 
     # they successfully discriminated in prior comparisons
     for(feature in f_order) {
-        feature <- f_order[1]
         # Add feature to checked list
         checked <- c(checked, feature)
         # Get item with max cue
